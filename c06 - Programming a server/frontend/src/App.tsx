@@ -1,8 +1,26 @@
 import { useEffect, useState } from "react";
 import Note from "./components/Note";
 import type { NoteData } from "./types/notes";
-import axios from "axios";
 import noteService from "./services/notes";
+import TextField from "@mui/material/TextField";
+
+import {
+  Button,
+  createTheme,
+  CssBaseline,
+  List,
+  Paper,
+  ThemeProvider,
+} from "@mui/material";
+
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    background: {
+      default: "#000",
+    },
+  },
+});
 
 function App() {
   const [notes, setNotes] = useState<NoteData[]>([]);
@@ -38,7 +56,7 @@ function App() {
     ? notes
     : notes.filter((note) => note.important);
 
-  const toggleImportanceOf = (id: number) => {
+  const toggleImportanceOf = (id: string) => {
     console.log("importance of " + id + " needs to be toggled");
 
     const note: NoteData | undefined = notes.find((n) => n.id === id);
@@ -51,7 +69,7 @@ function App() {
         .then((data) => {
           setNotes(notes.map((n) => (n.id === id ? data : n)));
         })
-        .catch((error) => {
+        .catch((_) => {
           alert(`the note '${note.content}' was already deleted from server`);
           setNotes(notes.filter((n) => n.id !== id));
         });
@@ -59,32 +77,41 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>Notes</h1>
-      <div>
-        <button onClick={() => setShowAll(!showAll)}>
-          show {showAll ? "important" : "all"}
-        </button>
-      </div>
-      <ul>
-        {filteredNotes.map((note) => (
-          <Note
-            key={note.id}
-            note={note}
-            toggleImportance={() => toggleImportanceOf(note.id)}
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <div style={{ margin: 20 }}>
+        <h1>Notes</h1>
+        <div>
+          <Button variant="contained" onClick={() => setShowAll(!showAll)}>
+            show {showAll ? "important" : "all"}
+          </Button>
+        </div>
+        <Paper style={{ padding: 8 }}>
+          <List>
+            {filteredNotes.map((note) => (
+              <Note
+                key={note.id}
+                note={note}
+                toggleImportance={() => toggleImportanceOf(note.id)}
+              />
+            ))}
+          </List>
+        </Paper>
+        <form onSubmit={addNote}>
+          <TextField
+            id="outlined-basic"
+            label="Type your note here..."
+            variant="outlined"
+            value={newNote}
+            onChange={handleNoteChange}
           />
-        ))}
-      </ul>
-      <form onSubmit={addNote}>
-        <input
-          type="text"
-          value={newNote}
-          placeholder="Type your note here..."
-          onChange={handleNoteChange}
-        />
-        <button type="submit">Add Note</button>
-      </form>
-    </div>
+
+          <Button variant="outlined" type="submit">
+            Add Note
+          </Button>
+        </form>
+      </div>
+    </ThemeProvider>
   );
 }
 
